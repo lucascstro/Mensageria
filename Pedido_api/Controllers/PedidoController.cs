@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Pedido_api.Model;
+using Pedido_api.Producer;
 
 namespace Pedido_api.Controllers;
 
@@ -8,10 +9,12 @@ namespace Pedido_api.Controllers;
 public class PedidoController : ControllerBase
 {
     private readonly ILogger<PedidoController> _logger;
+    private readonly ProducerBroker _producer;
 
-    public PedidoController(ILogger<PedidoController> logger)
+    public PedidoController(ILogger<PedidoController> logger, ProducerBroker producer)
     {
         _logger = logger;
+        _producer = producer;
     }
 
     [HttpPost(Name = "Pedido")]
@@ -38,6 +41,9 @@ public class PedidoController : ControllerBase
             msg += $"Produto: {produto.Nome} - Quantidade: {produto.Quantidade} - Preço: {produto.Preco} \r\n";
 
         _logger.LogInformation(msg);
+
+        await _producer.CreatConnectionAsync();
+        await _producer.SendMsgAsync("payment", msg);
 
         return Ok("Pedido recebido com sucesso! \r\n" +
                   "Você recebera os detalhes de cada etapa email informado. \r\n" +

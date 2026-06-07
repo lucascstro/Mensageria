@@ -4,28 +4,21 @@ namespace WorkerService;
 
 public class WorkerReciver
 {
-    IConnection connection;
-    IChannel channel;
-
-    public async Task CreateConnectionAsync()
+    public async Task StartListeningAsync(string queueName, Func<string, Task<string>> processar)
     {
-        var factory = new ConnectionFactory { HostName = "localhost" };
-        connection = await factory.CreateConnectionAsync();
-        channel = await connection.CreateChannelAsync();        
-    }
+        BaseWorker bs = new BaseWorker();
+        var ret = await bs.CreateConnectionAsync();
 
-    public async Task StartListeningAsync(string queueName)
-    {
-        var consumer = new AsyncEventingBasicConsumer(channel);
-                
-        consumer.ReceivedAsync += (model, ea) =>
+        var consumer = new AsyncEventingBasicConsumer(ret);
+
+        consumer.ReceivedAsync += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var message = System.Text.Encoding.UTF8.GetString(body);
-            Console.WriteLine("Received: {0}", message);
-            return Task.CompletedTask;
+            var resultProc = processar(message);
+            return;
         };
 
-        await channel.BasicConsumeAsync(queueName, autoAck: true, consumer: consumer);
+        await ret.BasicConsumeAsync(queueName, autoAck: true, consumer: consumer);
     }
 }

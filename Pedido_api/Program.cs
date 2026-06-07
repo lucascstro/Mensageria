@@ -1,6 +1,6 @@
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
-using Pedido_api.Producer;
+using Pedido_api.Service;
 
 namespace Pedido_api;
 
@@ -19,7 +19,7 @@ public class Program
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Pedidos Api", Version = "v1" });
         });
 
-        builder.Services.AddSingleton<ProducerBroker>();
+        builder.Services.AddSingleton<OrderProcess>();
         
         var app = builder.Build();
 
